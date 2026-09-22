@@ -28,8 +28,8 @@ import { McpAgentResponseDto } from './dto/mcp-agent-response.dto';
 
 @Controller('mcp/auth')
 @ApiTags('mcp-auth')
-// @UseGuards(IsAuth)
-// @ApiSecurity('Auth0AccessToken')
+@UseGuards(IsAuth)
+@ApiSecurity('Auth0AccessToken')
 export class ExternalMcpAuthController {
   constructor(private readonly externalMcpAuthService: ExternalMcpAuthService) {}
 

@@ -20,8 +20,11 @@ export class TasksService {
 
   constructor(private readonly httpService: HttpService) {
     this.apiUrl = process.env.MAIN_API_URL || 'http://localhost:4000';
-    // this.internalKey = process.env.INTERNAL_SERVICE_KEY || 'dev-secret';
-    this.internalKey = 'dev-secret'; // Add an internal shared key for both api-server and mcp-server. Store this in AWS Secrets Mananger
+
+    this.internalKey = process.env.INTERNAL_SERVICE_KEY || '';
+    if (!this.internalKey) {
+      throw new Error('INTERNAL_SERVICE_KEY environment variable is not set');
+    }
   }
 
   async listTasks(mcpToken: string, query: any): Promise<any> {

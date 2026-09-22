@@ -13,64 +13,44 @@ import {
   Res,
 } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { FastifyReply } from 'fastify';
 import { IsAuth } from '../../auth/guards/is-auth/is-auth.guard';
 import { AuthContext } from '../../../shared/decorators/passport.decorator';
 import { Passport } from '../../auth/domain/passport.model';
 import { ExternalMcpAuthService } from '../services/external-mcp-auth.service';
 import { CreateExternalApiTokenDto } from '../dto/create-external-api-token.dto';
-import { ExternalApiTokenIssuedResponseDto, ExternalApiTokenResponseDto } from '../dto/external-api-token-response.dto';
+import { ExternalApiTokenResponseDto } from '../dto/external-api-token-response.dto';
 import { McpAgentResponseDto } from '../dto/mcp-agent-response.dto';
-// import { Response } from 'express'; //
-import { FastifyReply } from 'fastify';
 
 @Controller('mcp/auth')
 @ApiTags('mcp-auth')
-// @UseGuards(IsAuth)
-// @ApiSecurity('Auth0AccessToken')
+@UseGuards(IsAuth)
+@ApiSecurity('Auth0AccessToken')
 export class ExternalMcpAuthController {
   constructor(private readonly externalMcpAuthService: ExternalMcpAuthService) {}
 
-  /*
   @Post('tokens')
   @ApiOperation({
     summary: 'Issue a new MCP access token',
     description:
       'Generates a scoped access token for an MCP client to access this Focus Bear account. ' +
-      'The raw token is returned ONCE and cannot be retrieved again — store it securely in your MCP client settings.',
-  })
-  async issueToken(@Body() dto: CreateExternalApiTokenDto): Promise<ExternalApiTokenIssuedResponseDto> {
-    const fakeUserId = '2636a216-f363-493e-aeb8-d275a0a9016d';
-    return this.externalMcpAuthService.issueToken(fakeUserId, dto);
-  }*/
-
-  @Post('tokens')
-  @ApiOperation({
-    summary: 'Issue a new MCP access token',
-    description: 'Generates a token. Use ?redirect=true for mobile deep linking, or omit it to get raw JSON.',
+      'The raw token is returned ONCE and cannot be retrieved again. ' +
+      'Use ?redirect=true for mobile deep linking, or omit it to get raw JSON.',
   })
   async issueToken(
+    @AuthContext() { user }: Passport,
     @Body() dto: CreateExternalApiTokenDto,
     @Query('redirect') redirect: string,
-    @Res() res: FastifyReply, // <-- 1. Use FastifyReply instead of Express Response
+    @Res() res: FastifyReply,
   ) {
-    const fakeUserId = '2636a216-f363-493e-aeb8-d275a0a9016d';
-
-    // Generate the token
-    const tokenData = await this.externalMcpAuthService.issueToken(fakeUserId, dto);
+    const tokenData = await this.externalMcpAuthService.issueToken(user.id, dto);
 
     if (redirect === 'true') {
       const deepLinkUrl = `focusbear://auth?token=${tokenData.token}`;
-      // 2. Fastify syntax: chain .status() before .redirect()
       return res.status(HttpStatus.FOUND).redirect(deepLinkUrl);
     }
 
-    // 3. Fastify syntax: use .send() instead of .json()
     return res.status(HttpStatus.CREATED).send(tokenData);
-  }
-
-  @Get('test-redirect')
-  async testRedirect(@Res({ passthrough: true }) res: FastifyReply) {
-    return res.status(302).redirect('focusbear://auth?token=dummy-test-token-123');
   }
 
   @Get('tokens')
