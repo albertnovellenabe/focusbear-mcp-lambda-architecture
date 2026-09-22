@@ -104,8 +104,7 @@ export class McpService {
   // This replaces both initializeSseStream and handleIncomingMessage
   async handleStreamRequest1111111(body: any, userJwt: string, responseStream: any) {
     const { method, params, id } = body;
-    // const mcpAgentToken = process.env.MCP_AGENT_TOKEN;
-    const mcpAgentToken = '6537eff81cb66ec00f042aaa6a3ff4c6d4ea9e67b478132f39f66a51032aa2ad';
+    const mcpAgentToken = process.env.MCP_AGENT_TOKEN;
 
     let responsePayload: any;
 
